@@ -15,6 +15,11 @@ const links = [
   { href: "/about", label: { zh: "关于", en: "About" } },
 ];
 
+const projectName = {
+  zh: "角膜营养不良日志",
+  en: "Corneal Dystrophy Log",
+};
+
 export default function Nav() {
   const pathname = usePathname();
   const locale: Locale = pathname.startsWith("/en") ? "en" : "zh";
@@ -25,10 +30,7 @@ export default function Nav() {
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
         <Link href={hrefFor(locale, "/")} className="no-underline">
           <div className="font-serif text-xl font-semibold">
-            角膜营养不良日志
-          </div>
-          <div className="text-sm uppercase tracking-[0.18em] text-[var(--teal)]">
-            Corneal Dystrophy Log
+            {projectName[locale]}
           </div>
         </Link>
         <div className="grid w-full max-w-[350px] grid-cols-4 gap-2 lg:flex lg:w-auto lg:max-w-none lg:flex-wrap lg:items-center">
