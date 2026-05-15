@@ -124,8 +124,24 @@ export default function AskClient({ lang = "zh" }: { lang?: Locale }) {
         ) : null}
         {answer ? (
           <div>
-            <div className="prose prose-neutral max-w-none leading-7">
-              <ReactMarkdown>{answer}</ReactMarkdown>
+            <div className="ask-answer rounded border border-[var(--line)] bg-white p-4">
+              <ReactMarkdown
+                components={{
+                  h2: ({ children }) => <h2>{children}</h2>,
+                  h3: ({ children }) => <h3>{children}</h3>,
+                  p: ({ children }) => <p>{children}</p>,
+                  ul: ({ children }) => <ul>{children}</ul>,
+                  ol: ({ children }) => <ol>{children}</ol>,
+                  li: ({ children }) => <li>{children}</li>,
+                  a: ({ href, children }) => (
+                    <a href={href} target="_blank" rel="noreferrer">
+                      {children}
+                    </a>
+                  ),
+                }}
+              >
+                {answer}
+              </ReactMarkdown>
             </div>
             {citations.length ? (
               <div className="mt-6 border-t border-[var(--line)] pt-4">

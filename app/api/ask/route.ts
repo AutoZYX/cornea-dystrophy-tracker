@@ -138,16 +138,16 @@ function localFallback(question: string, cause: string) {
   if (!sourceLines.length) {
     return {
       answer: zh
-        ? `${providerNote}\n${reason}\n\n当前数据库没有找到明确匹配记录。建议换用分型、基因、术式、医院或症状关键词重试。`
-        : `${providerNote}\n${reason}\n\nNo clear record matched. Try a condition, gene, treatment, institution, or symptom keyword.`,
+        ? `### 直接结论\n${providerNote}\n\n${reason}\n\n当前数据库没有找到明确匹配记录。\n\n### 下一步\n- 建议换用分型、基因、术式、医院或症状关键词重试。\n\n### 依据记录\n- 暂无匹配记录。`
+        : `### Direct Answer\n${providerNote}\n\n${reason}\n\nNo clear record matched.\n\n### Next Steps\n- Try a condition, gene, treatment, institution, or symptom keyword.\n\n### Cited Records\n- No matching record.`,
       citations,
     };
   }
 
   return {
     answer: zh
-      ? `${providerNote}\n${reason}\n\n最相关记录：\n${sourceLines.join("\n")}\n\n依据记录：\n${sourceLines.join("\n")}`
-      : `${providerNote}\n${reason}\n\nMost relevant records:\n${sourceLines.join("\n")}\n\nCited records:\n${sourceLines.join("\n")}`,
+      ? `### 直接结论\n${providerNote}\n\n${reason}\n\n### 最相关记录\n${sourceLines.join("\n")}\n\n### 下一步\n- 请打开相关记录和来源链接核对原文。\n- 高风险症状或治疗决策应由角膜专科医生确认。\n\n### 依据记录\n${sourceLines.join("\n")}`
+      : `### Direct Answer\n${providerNote}\n\n${reason}\n\n### Most Relevant Records\n${sourceLines.join("\n")}\n\n### Next Steps\n- Open the cited records and original source links.\n- High-risk symptoms or treatment decisions should be confirmed by a cornea specialist.\n\n### Cited Records\n${sourceLines.join("\n")}`,
     citations,
   };
 }
