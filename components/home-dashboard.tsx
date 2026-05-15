@@ -85,7 +85,7 @@ export default function HomeDashboard({
           {isEn ? "Why this site exists" : "这个页面为什么存在"}
         </p>
         <h2 className="mt-2 text-3xl font-semibold">
-          {isEn ? "A personal, non-commercial patient-family project." : "这是一个个人制作、非商业化的患者家族项目。"}
+          {isEn ? "A patient's personal open-source project." : "这是一个患者的个人开源项目。"}
         </h2>
         <p className="mt-3 max-w-4xl leading-8 text-[var(--muted)]">
           {isEn

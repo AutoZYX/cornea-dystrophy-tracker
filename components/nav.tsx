@@ -24,11 +24,11 @@ export default function Nav() {
     <nav className="border-b border-[var(--line)] bg-[var(--bg)]">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
         <Link href={hrefFor(locale, "/")} className="no-underline">
-          <div className="text-sm uppercase tracking-[0.18em] text-[var(--teal)]">
-            Cornea Dystrophy Log
-          </div>
           <div className="font-serif text-xl font-semibold">
-            {locale === "zh" ? "角膜营养不良观察手册" : "Corneal Dystrophy Handbook"}
+            角膜营养不良日志
+          </div>
+          <div className="text-sm uppercase tracking-[0.18em] text-[var(--teal)]">
+            Corneal Dystrophy Log
           </div>
         </Link>
         <div className="grid w-full max-w-[350px] grid-cols-4 gap-2 lg:flex lg:w-auto lg:max-w-none lg:flex-wrap lg:items-center">
