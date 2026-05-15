@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { Locale } from "@/lib/i18n";
 import type { FollowUpRecord, PersonalProfile } from "@/lib/types";
 
 const STORAGE_KEY = "cornea-dystrophy-log-v1";
@@ -10,15 +11,40 @@ interface StoredData {
   followUps: FollowUpRecord[];
 }
 
+interface ExtractedRecord {
+  summary: string;
+  eventType: string;
+  urgency: "routine" | "soon" | "urgent";
+  confidence: number;
+  redFlags: string[];
+  suggestedNextAction: string;
+  profiles: Array<Omit<PersonalProfile, "id" | "updatedAt">>;
+  followUps: Array<Omit<FollowUpRecord, "id">>;
+  notes: string[];
+  fallback?: boolean;
+  model?: string;
+}
+
 const emptyData: StoredData = { profiles: [], followUps: [] };
+const narrativeExamples = [
+  "我现在是双眼角膜移植术后 5 年，平时用眼正常，但如果夜晚用眼过多，第二天会出现严重散光。",
+  "今天右眼发生红肿、畏光，看小字明显变困难，之前做过角膜移植。",
+  "父亲和爷爷都有类似角膜问题，我想记录家族史，并安排下一次角膜地形图和基因检测咨询。",
+];
 
 function uid(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-export default function PersonalRecords() {
+export default function PersonalRecords({ lang = "zh" }: { lang?: Locale }) {
+  const isEn = lang === "en";
   const [data, setData] = useState<StoredData>(emptyData);
   const [loaded, setLoaded] = useState(false);
+  const [narrative, setNarrative] = useState(narrativeExamples[0]);
+  const [extracting, setExtracting] = useState(false);
+  const [extractError, setExtractError] = useState("");
+  const [extraction, setExtraction] = useState<ExtractedRecord | null>(null);
+  const [saveMessage, setSaveMessage] = useState("");
   const [profile, setProfile] = useState({
     label: "",
     relation: "",
@@ -144,6 +170,69 @@ export default function PersonalRecords() {
     });
   }
 
+  async function extractNarrative() {
+    const text = narrative.trim();
+    if (!text) return;
+    setExtracting(true);
+    setExtractError("");
+    setSaveMessage("");
+    setExtraction(null);
+    try {
+      const response = await fetch("/api/extract-record", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Extraction failed");
+      setExtraction(payload);
+    } catch (err) {
+      setExtractError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setExtracting(false);
+    }
+  }
+
+  function saveExtraction() {
+    if (!extraction) return;
+    const now = new Date().toISOString();
+    setData((current) => ({
+      profiles: [
+        ...current.profiles,
+        ...extraction.profiles.map((item) => ({
+          id: uid("profile"),
+          label: item.label || "未命名记录",
+          relation: item.relation || "",
+          affectedStatus: item.affectedStatus || "",
+          currentStatus: item.currentStatus || "",
+          history: item.history || "",
+          nextAction: item.nextAction || extraction.suggestedNextAction || "",
+          updatedAt: now,
+        })),
+      ],
+      followUps: [
+        ...current.followUps,
+        ...extraction.followUps.map((item) => ({
+          id: uid("followup"),
+          date: item.date || new Date().toISOString().slice(0, 10),
+          eye: item.eye || "unknown",
+          visitType: item.visitType || extraction.eventType || "自然语言记录",
+          hospital: item.hospital || "",
+          doctor: item.doctor || "",
+          visualAcuity: item.visualAcuity || "",
+          astigmatism: item.astigmatism || "",
+          iop: item.iop || "",
+          corneaStatus: item.corneaStatus || "",
+          medication: item.medication || "",
+          warningSigns: item.warningSigns || extraction.redFlags.join("、"),
+          nextPlan: item.nextPlan || extraction.suggestedNextAction || "",
+          notes: item.notes || extraction.summary || "",
+        })),
+      ],
+    }));
+    setSaveMessage("已保存到当前浏览器本地记录。");
+  }
+
   function exportJson() {
     const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: "application/json",
@@ -176,25 +265,126 @@ export default function PersonalRecords() {
   return (
     <div className="space-y-6">
       <section className="border-l-4 border-[var(--teal)] bg-white p-5">
-        <h1 className="text-3xl font-semibold">我的私密记录</h1>
+        <h1 className="text-3xl font-semibold">{isEn ? "My Private Local Log" : "我的私密记录"}</h1>
         <p className="mt-3 leading-7 text-[var(--muted)]">
-          这些内容默认只保存在当前浏览器的 localStorage。本站不会自动上传病历、家族史或儿童信息。
-          换设备前请导出 JSON；清理浏览器数据会删除记录。
+          {isEn
+            ? "Records are stored in this browser's localStorage by default. The smart extractor only sends the text you type in this box and does not read saved local records. Export JSON before switching devices; clearing browser data deletes the log."
+            : "这些内容默认只保存在当前浏览器的 localStorage。本站不会自动上传病历、家族史或儿童信息。智能提取只会发送你本次输入的这段文字，不会读取已保存的本地记录。换设备前请导出 JSON；清理浏览器数据会删除记录。"}
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <button type="button" onClick={exportJson} className="focus-ring rounded bg-[var(--teal)] px-4 py-2 text-white">
-            导出 JSON
+            {isEn ? "Export JSON" : "导出 JSON"}
           </button>
           <button type="button" onClick={exportBriefing} className="focus-ring rounded border border-[var(--line)] bg-white px-4 py-2">
-            导出复诊摘要
+            {isEn ? "Export Visit Briefing" : "导出复诊摘要"}
           </button>
           <button type="button" onClick={clearAll} className="focus-ring rounded border border-[var(--coral)] px-4 py-2 text-[var(--coral)]">
-            清空本机记录
+            {isEn ? "Clear Local Log" : "清空本机记录"}
           </button>
         </div>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-2">
+      <section className="panel p-5">
+        <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+          <div>
+            <p className="text-sm uppercase tracking-[0.16em] text-[var(--teal)]">Natural language intake</p>
+            <h2 className="mt-2 text-2xl font-semibold">{isEn ? "Write one narrative, then review structured fields" : "用一段话记录，系统自动整理"}</h2>
+            <p className="mt-3 leading-7 text-[var(--muted)]">
+              {isEn
+                ? "Describe history, post-transplant status, symptoms, or next actions in natural language. The system extracts a profile and follow-up/event note; you review before saving."
+                : "可以像写日记一样描述病史、术后状态、当天症状或下一步计划。系统会提取为“个人概况”和“复查/事件记录”，保存前仍由你确认。"}
+            </p>
+            <div className="mt-4 grid gap-2">
+              {narrativeExamples.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setNarrative(item)}
+                  className="focus-ring rounded border border-[var(--line)] bg-white px-3 py-2 text-left text-sm leading-6 text-[var(--muted)] hover:text-[var(--text)]"
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium">{isEn ? "Narrative note" : "自然语言记录"}</span>
+              <textarea
+                value={narrative}
+                onChange={(event) => setNarrative(event.target.value)}
+                rows={8}
+                className="focus-ring w-full rounded border border-[var(--line)] bg-white px-3 py-2 leading-7"
+                placeholder={isEn ? "Example: I am 5 years after bilateral corneal transplantation..." : "例如：我现在是双眼角膜移植术后 5 年..."}
+              />
+            </label>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={extractNarrative}
+                disabled={extracting}
+                className="focus-ring rounded bg-[var(--accent-strong)] px-4 py-2 font-medium text-white disabled:opacity-60"
+              >
+                {extracting ? (isEn ? "Extracting..." : "提取中...") : (isEn ? "Extract" : "智能提取")}
+              </button>
+              {extraction ? (
+                <button
+                  type="button"
+                  onClick={saveExtraction}
+                  className="focus-ring rounded border border-[var(--accent-strong)] bg-white px-4 py-2 font-medium text-[var(--accent-strong)]"
+                >
+                  {isEn ? "Save Extraction" : "保存提取结果"}
+                </button>
+              ) : null}
+            </div>
+            {extractError ? <p className="mt-3 text-sm text-[var(--coral)]">{extractError}</p> : null}
+            {saveMessage ? <p className="mt-3 text-sm text-[var(--green)]">{saveMessage}</p> : null}
+          </div>
+        </div>
+
+        {extraction ? (
+          <div className="mt-5 rounded border border-[var(--line)] bg-[var(--surface-soft)] p-4">
+            <div className="mb-3 flex flex-wrap gap-2">
+              <span className="badge">事件：{extraction.eventType}</span>
+              <span className="badge">紧急度：{extraction.urgency}</span>
+              <span className="badge">置信度：{Math.round(extraction.confidence * 100)}%</span>
+              <span className="badge">模型：{extraction.model || "DeepSeek"}</span>
+              {extraction.fallback ? <span className="badge">fallback</span> : null}
+            </div>
+            <p className="leading-7 text-[var(--text)]">{extraction.summary}</p>
+            {extraction.redFlags.length ? (
+              <div className="mt-3 rounded border border-[var(--coral)] bg-white p-3 text-[var(--coral)]">
+                识别到红旗症状：{extraction.redFlags.join("、")}。请优先联系眼科医生或急诊眼科服务。
+              </div>
+            ) : null}
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <PreviewBlock
+                title="将写入个人/家族概况"
+                lines={extraction.profiles.length
+                  ? extraction.profiles.map((item) => `${item.label || "未命名"}：${item.affectedStatus || item.currentStatus || "待确认"}；下一步：${item.nextAction || extraction.suggestedNextAction}`)
+                  : ["未提取到个人/家族概况。"]}
+              />
+              <PreviewBlock
+                title="将写入复查/事件记录"
+                lines={extraction.followUps.length
+                  ? extraction.followUps.map((item) => `${item.date || "日期未填"} · ${item.eye || "unknown"} · ${item.visitType || "记录"} · ${item.warningSigns || item.astigmatism || item.notes || "待确认"}`)
+                  : ["未提取到复查或症状事件。"]}
+              />
+            </div>
+            <p className="mt-3 text-sm leading-6 text-[var(--muted)]">建议下一步：{extraction.suggestedNextAction}</p>
+          </div>
+        ) : null}
+      </section>
+
+      <details className="rounded border border-[var(--line)] bg-[var(--surface-soft)] p-4">
+        <summary className="cursor-pointer text-lg font-semibold text-[var(--text)]">
+          高级手动编辑
+        </summary>
+        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+          如果智能提取缺少某个字段，可以展开后手动补充。日常记录建议优先使用上方的一段话输入。
+        </p>
+        <section className="mt-5 grid gap-5 lg:grid-cols-2">
         <div className="panel p-5">
           <h2 className="text-2xl font-semibold">家族或个人患病情况</h2>
           <div className="mt-4 grid gap-3">
@@ -243,9 +433,10 @@ export default function PersonalRecords() {
             </button>
           </div>
         </div>
-      </section>
+        </section>
+      </details>
 
-      <section className="grid gap-5 lg:grid-cols-2">
+      <section className="grid gap-5 lg:grid-cols-3">
         <div className="panel p-5">
           <h2 className="text-2xl font-semibold">已记录概况</h2>
           <div className="mt-4 grid gap-3">
@@ -256,6 +447,22 @@ export default function PersonalRecords() {
                 <p className="mt-2 text-sm leading-6">{item.nextAction || "下一步未填"}</p>
               </div>
             )) : <p className="text-[var(--muted)]">尚无记录。</p>}
+          </div>
+        </div>
+
+        <div className="panel p-5">
+          <h2 className="text-2xl font-semibold">已记录事件</h2>
+          <div className="mt-4 grid gap-3">
+            {data.followUps.length ? [...data.followUps]
+              .sort((a, b) => b.date.localeCompare(a.date))
+              .slice(0, 8)
+              .map((item) => (
+                <div key={item.id} className="rounded border border-[var(--line)] bg-white p-3">
+                  <p className="font-medium">{item.date || "日期未填"} · {item.eye}</p>
+                  <p className="mt-2 text-sm text-[var(--muted)]">{item.visitType || "记录类型未填"}</p>
+                  <p className="mt-2 text-sm leading-6">{item.warningSigns || item.astigmatism || item.nextPlan || "细节未填"}</p>
+                </div>
+              )) : <p className="text-[var(--muted)]">尚无事件或复查记录。</p>}
           </div>
         </div>
 
@@ -319,5 +526,18 @@ function TextArea({
         className="focus-ring w-full rounded border border-[var(--line)] bg-white px-3 py-2 leading-6"
       />
     </label>
+  );
+}
+
+function PreviewBlock({ title, lines }: { title: string; lines: string[] }) {
+  return (
+    <div className="rounded border border-[var(--line)] bg-white p-3">
+      <p className="mb-2 text-sm font-semibold text-[var(--text)]">{title}</p>
+      <ul className="space-y-2 text-sm leading-6 text-[var(--muted)]">
+        {lines.map((line) => (
+          <li key={line}>• {line}</li>
+        ))}
+      </ul>
+    </div>
   );
 }

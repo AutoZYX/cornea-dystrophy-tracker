@@ -1,18 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f7f5ef;
-  --text: #17211f;
-  --muted: #61706b;
-  --line: #d9ddd2;
+  --bg: #faf9f5;
+  --text: #1a1a18;
+  --muted: #57544a;
+  --line: #e0ded6;
   --surface: #ffffff;
-  --surface-soft: #eef3ee;
-  --teal: #0f766e;
-  --green: #285943;
-  --coral: #c15f45;
-  --amber: #b8872d;
-  --blue: #486a8f;
-  --radius: 8px;
+  --surface-soft: #f0eeea;
+  --badge-bg: #f0eeea;
+  --accent: #c85a3a;
+  --accent-strong: #9d3f28;
+  --teal: var(--accent-strong);
+  --green: #536b48;
+  --coral: #b24d31;
+  --amber: #8a641d;
+  --blue: #385f78;
+  --radius: 10px;
 }
 
 @theme inline {
@@ -28,14 +31,18 @@
   box-sizing: border-box;
 }
 
+html {
+  font-size: 18px;
+  scroll-behavior: smooth;
+}
+
 body {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(247, 245, 239, 0.86)),
-    var(--bg);
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  line-height: 1.65;
 }
 
 h1,
@@ -43,7 +50,7 @@ h2,
 h3 {
   font-family: var(--font-serif), Georgia, serif;
   letter-spacing: 0;
-  line-height: 1.18;
+  line-height: 1.2;
 }
 
 a {
@@ -57,10 +64,17 @@ select {
   font: inherit;
 }
 
+button,
+input,
+select {
+  min-height: 2.65rem;
+}
+
 .panel {
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--surface);
   border-radius: var(--radius);
+  box-shadow: 0 12px 32px rgba(42, 35, 25, 0.06);
 }
 
 .badge {
@@ -68,15 +82,15 @@ select {
   align-items: center;
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 0.25rem 0.65rem;
-  font-size: 0.76rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.82rem;
   line-height: 1.2;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--badge-bg);
 }
 
 .focus-ring:focus-visible {
-  outline: 3px solid rgba(15, 118, 110, 0.28);
+  outline: 3px solid rgba(157, 63, 40, 0.3);
   outline-offset: 2px;
 }
 
@@ -87,16 +101,16 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.6rem 0.8rem;
-  font-size: 0.88rem;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.95rem;
 }
 
 .cornea-layer:first-child {
-  border-radius: 999px 999px 0 0;
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 
 .cornea-layer:last-child {
-  border-radius: 0 0 999px 999px;
+  border-radius: 0 0 var(--radius) var(--radius);
 }
 
 .cornea-layer span {
@@ -104,11 +118,42 @@ select {
 }
 
 @media (max-width: 640px) {
+  html {
+    font-size: 17px;
+  }
+
   .cornea-layer {
     align-items: flex-start;
     flex-direction: column;
     gap: 0.2rem;
     padding: 0.7rem 1rem;
+    overflow-wrap: anywhere;
+  }
+
+  .home-hero-title,
+  .home-hero-text,
+  .home-hero-card {
+    max-width: min(calc(100vw - 2.5rem), 350px);
+  }
+
+  .home-hero-actions a {
+    max-width: min(calc(100vw - 2.5rem), 350px);
+  }
+
+  .home-hero-title {
+    font-size: 1.72rem;
+    line-height: 1.22;
+    max-width: min(calc(100vw - 3rem), 320px);
+    word-break: break-all;
+  }
+
+  .home-hero-text {
+    max-width: min(calc(100vw - 3rem), 350px);
+  }
+
+  .home-hero-actions a {
+    display: block;
+    width: min(calc(100vw - 2.5rem), 350px);
   }
 }
 

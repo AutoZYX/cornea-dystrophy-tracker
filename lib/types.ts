@@ -52,10 +52,15 @@ export interface KnowledgeRecord {
   title: string;
   title_en?: string;
   summary: string;
+  summary_en?: string;
   key_points: string[];
+  key_points_en?: string[];
   clinical_use?: string[];
+  clinical_use_en?: string[];
   limits?: string[];
+  limits_en?: string[];
   tags: string[];
+  tags_en?: string[];
   source_ids: string[];
   evidence_level: EvidenceLevel;
   source_type: SourceType;
@@ -68,11 +73,17 @@ export interface KnowledgeRecord {
 export interface InstitutionRecord {
   id: string;
   name: string;
+  name_en?: string;
   city: string;
+  city_en?: string;
   country: string;
+  country_en?: string;
   focus: string[];
+  focus_en?: string[];
   why_it_matters: string;
+  why_it_matters_en?: string;
   public_note: string;
+  public_note_en?: string;
   source_ids: string[];
   evidence_level: EvidenceLevel;
   verified_at: string;

@@ -5,9 +5,10 @@ export default function AboutPage() {
         <p className="mb-3 text-sm uppercase tracking-[0.18em] text-[var(--teal)]">About</p>
         <h1 className="text-4xl font-semibold">为什么做这个平台</h1>
         <p className="mt-5 leading-8 text-[var(--muted)]">
-          角膜营养不良是一类少见但影响长期生活质量的遗传性眼病。患者和家属常面对三个问题：
+          这是张玉新个人制作和维护的非商业网页。起因是我本人和家族多位成员受到角膜营养不良影响，
+          因此需要一个能长期记录、检索和核验信息的地方。角膜营养不良是一类少见但影响长期生活质量的遗传性眼病。患者和家属常面对三个问题：
           病名复杂、治疗路径分散、家庭病史很难持续记录。这个平台把公共知识和私人记录分开，
-          前者可检索、可引用、可问答，后者默认只保存在用户本地。
+          前者可检索、可引用、可问答，后者默认只保存在用户本地。本站不销售医疗服务，不做挂号导流，不接受转诊利益。
         </p>
       </section>
       <section className="grid gap-4 md:grid-cols-3">
