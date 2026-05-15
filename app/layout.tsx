@@ -18,7 +18,7 @@ const notoSerif = Noto_Serif_SC({
 });
 
 export const metadata: Metadata = {
-  title: "Corneal Dystrophy Log — 角膜营养不良日志",
+  title: "角膜营养不良日志",
   description:
     "公开角膜营养不良知识库、医院医生追踪、术后护理清单和本地私密记录工具。",
 };
